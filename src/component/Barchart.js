@@ -1,45 +1,39 @@
-import React, { useEffect } from 'react'
-import { Bar,CategoryScale,charts } from 'react-chartjs-2';
+import React, { useEffect, useState } from 'react'
+import { Bar } from 'react-chartjs-2';
 import Chart from 'chart.js/auto'
+import {getData} from '../api/api'
 
-function Barchart(props) {
+function Barchart() {
+    const [data, setData] = useState([]);
+    useEffect(()=>{
+        getData().then(results=>{
+            let tmpData = {
+                labels: [],
+                datasets: [],
+            };
 
-    const {barData} = props
+            const labels = ['characters','planets','species','starships'];
+            const color = ['#6369D1','#60E1E0','#D8D2E1','#B88E8D'];
 
-    // for(const key in barData.title){
-    //     labels.push(barData.title[key])
-    // }
-    console.log('bar',barData)
-
-    const state = {
-        labels: [barData.title[0],barData.title[1],barData.title[2],barData.title[3],barData.title[4],barData.title[5]],
-        datasets: [
-            {
-            label: Object.keys(barData)[1],
-            backgroundColor: 'rgba(75,192,192,1)',
-            borderColor: 'rgba(0,0,0,1)',
-            data: barData.characters
-            },
-            {
-            label: Object.keys(barData)[2],
-            backgroundColor: 'red',
-            borderColor: 'rgba(0,0,0,1)',
-            data: barData.planets
-            },
-            {
-            label: Object.keys(barData)[3],
-            backgroundColor: 'green',
-            borderColor: 'rgba(0,0,0,1)',
-            data: barData.species
-            },
-            {
-            label:Object.keys(barData)[4],
-            backgroundColor: 'blue',
-            borderColor: 'rgba(0,0,0,1)',
-            data: barData.starships
-            },
-        ]
-    }
+            labels.forEach((element,idx)=>{
+                let curdata = [];
+                results.forEach((elementTwo)=>{
+                    curdata.push(elementTwo[element].length);
+                    if(tmpData.labels.length < results.length){
+                        tmpData.labels.push(elementTwo.title);
+                    };
+                });
+                tmpData.datasets.push({
+                    label: element,
+                    backgroundColor: color[idx],
+                    data: curdata,
+                    pointStyle:'rect',
+                    barPercentage: 0.5,
+                });
+            });
+            setData(tmpData);
+        });
+    }, []);
 
     const options = {
         responsive: true,
@@ -54,13 +48,18 @@ function Barchart(props) {
         },
         plugins:{
             legend:{
-            position:'bottom'
+                position:'bottom',
+                labels :{
+                    usePointStyle: true,
+                }
             }
         }
     }
 
   return (
-    <Bar options={options} data={state} />
+    <div>
+        {data.length !== 0 ? <Bar options={options} data={data} /> : 'Loading...'}
+    </div>
   )
 }
 
